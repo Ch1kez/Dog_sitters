@@ -7,11 +7,12 @@ from dotenv import load_dotenv
 load_dotenv()
 
 # Чтение параметров подключения из переменных окружения
-DATABASE_URL = os.getenv("DATABASE_URL")
+DB_NAME = os.getenv("DB_NAME")
 
 async def get_db():
     # Устанавливаем соединение с базой данных
-    return await asyncpg.connect(DATABASE_URL)
+    return await asyncpg.connect(user='admin', password='qwerty', database=DB_NAME, host='localhost',
+                                     port=5432)
 
 async def close_db(connection):
     # Закрываем соединение с базой данных

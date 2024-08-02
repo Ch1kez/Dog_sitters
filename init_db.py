@@ -4,7 +4,7 @@ import os
 from dotenv import load_dotenv
 
 load_dotenv()
-DB_NAME = os.getenv("DB_NAME", "Dog_sitters")  # Укажите имя базы данных
+DB_NAME = os.getenv("DB_NAME", "Dog_sitters")
 
 async def create_database_and_tables():
     # Создаем подключение к серверу PostgreSQL
