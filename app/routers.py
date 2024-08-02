@@ -65,12 +65,13 @@ async def create_order(order: OrderCreate):
 
 
 @router.get("/orders/{date}", response_model=list[OrderResponse])
-async def get_orders(date: str):
+async def get_orders(date: datetime):
     conn = await get_db()
     try:
         query = """
         SELECT * FROM orders WHERE walk_time::date = $1::date
         """
+        print(query)
         rows = await conn.fetch(query, date)
         return [OrderResponse(**dict(row)) for row in rows]
     except asyncpg.PostgresError as e:

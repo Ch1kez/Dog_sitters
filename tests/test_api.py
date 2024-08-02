@@ -12,8 +12,20 @@ def setup_db():
     pass
 
 def test_create_order(setup_db):
+    global TIME_ORDER
     # Подготовка данных для создания заказа
-    future_time = datetime.utcnow() + timedelta(hours=2)  # Пример времени через 2 часа
+    # Определим время через 2 часа, округленное до ближайших получаса или целого часа
+    current_time = datetime.utcnow()
+    future_time = current_time + timedelta(hours=2)
+    minute = 0 if future_time.minute < 30 else 30
+    future_time = future_time.replace(minute=minute, second=0, microsecond=0)
+
+    # Убедимся, что время в пределах 07:00 и 23:00
+    if future_time.hour < 7:
+        future_time = future_time.replace(hour=7, minute=0)
+    elif future_time.hour == 23 and future_time.minute > 0:
+        future_time = future_time.replace(hour=22, minute=30)
+
     payload = {
         "apartment_number": 101,
         "pet_name": "Buddy",
@@ -26,18 +38,16 @@ def test_create_order(setup_db):
 
     assert response.status_code == 200
     data = response.json()
-    print(data)
     assert "id" in data
     assert data["apartment_number"] == payload["apartment_number"]
     assert data["pet_name"] == payload["pet_name"]
     assert data["breed"] == payload["breed"]
-    # Проверка соответствия времени, преобразование к строке формата ISO 8601 для сравнения
     assert data["walk_time"] == payload["walk_time"]
     assert data["duration_minutes"] == payload["duration_minutes"]
 
 def test_get_orders(setup_db):
     # Определите дату для запроса
-    date = (datetime.utcnow() + timedelta(days=1)).date().isoformat()
+    date = datetime.today().date().isoformat()
 
     response = requests.get(f"{BASE_URL}/orders/{date}")
 
@@ -46,8 +56,7 @@ def test_get_orders(setup_db):
     assert isinstance(data, list)  # Убедитесь, что ответ - это список
 
     # Проверка, что данные в ответе корректны
-    if data:
-        order = data[0]
+    for order in data:
         assert "id" in order
         assert "apartment_number" in order
         assert "pet_name" in order
@@ -55,7 +64,9 @@ def test_get_orders(setup_db):
         assert "walk_time" in order
         assert "duration_minutes" in order
 
-        # Дополнительная проверка значений (если необходимо)
-        # Например, можно проверять, что время прогулки находится в пределах допустимого диапазона
-        walk_time = datetime.fromisoformat(order["walk_time"])
-        assert walk_time.hour >= 7 and walk_time.hour <= 23
+        walk_time = datetime.fromisoformat(order["walk_time"].replace("Z", "+00:00"))
+        assert walk_time.hour >= 7 and (walk_time.hour < 23 or (walk_time.hour == 23 and walk_time.minute == 0))
+        assert order["duration_minutes"] == 30
+        assert walk_time.minute in [0, 30]  # Проверка, что прогулка начинается либо в начале часа, либо в половину
+
+        # Дополнительные проверки можно добавить при необходимости
