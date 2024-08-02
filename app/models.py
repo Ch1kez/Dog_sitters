@@ -1,6 +1,4 @@
-
 from pydantic import BaseModel
-from typing import Optional
 from datetime import datetime
 
 # Модель данных для создания заказа
@@ -20,5 +18,3 @@ class OrderResponse(BaseModel):
     walk_time: datetime
     duration_minutes: int
 
-    class Config:
-        orm_mode = True
